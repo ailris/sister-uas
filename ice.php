@@ -217,7 +217,7 @@ function showUI()
                 });
             });
 
-            // Click on the delete button
+    
             // Click on the delete button
             table.on('click', '#delete', function(e) {
                 // Get data from the clicked row
@@ -294,19 +294,30 @@ if (isset($_REQUEST["flag"])) {
         $sqlCount = "SELECT count(*) FROM flavors;";
 
         // Return data
-        $length = intval($_REQUEST["length"]);
-        $start = intval($_REQUEST["start"]);
-        $sqlData = "SELECT ice_name, ice_type, ingredients, price FROM flavors WHERE ice_name LIKE CONCAT('%', :search, '%') LIMIT $length OFFSET $start";
+       $length = intval($_REQUEST["length"]);
+$start = intval($_REQUEST["start"]);
 
-        $data = array();
-        $data["draw"] = intval($_REQUEST["draw"]);
-        $data["recordsTotal"] = querySingleValue($con, $sqlCount, array());
-        $param = array("search" => $_REQUEST["search"]["value"] . "%");
-        $data["data"] = queryArrayRowsValues($con, $sqlData, $param);
-        $data["recordsFiltered"] = sizeof($data["data"]);
+$search_term = $_REQUEST["search"]["value"]; // Extract search term
 
-        header("Content-type: application/json; charset=utf-8");
-        echo json_encode($data);
+$sqlData = "SELECT ice_name, ice_type, ingredients, price
+            FROM flavors
+            WHERE ice_name LIKE :search
+                OR ice_type LIKE :search
+                OR ingredients LIKE :search
+                OR price = :search
+            LIMIT $length OFFSET $start";
+
+$data = array();
+$data["draw"] = intval($_REQUEST["draw"]);
+$data["recordsTotal"] = querySingleValue($con, $sqlCount, array()); // Assuming $sqlCount counts all records
+
+$param = array("search" => "%$search_term%"); // Use wildcards for partial matching
+$data["data"] = queryArrayRowsValues($con, $sqlData, $param);
+$data["recordsFiltered"] = sizeof($data["data"]);
+
+header("Content-type: application/json; charset=utf-8");
+echo json_encode($data);
+
     } else if ($_REQUEST["flag"] == "POST") {
         $response = array();
         try {
